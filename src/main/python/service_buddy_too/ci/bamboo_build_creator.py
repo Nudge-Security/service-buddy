@@ -3,14 +3,15 @@ from collections import OrderedDict
 
 from service_buddy_too.ci.build_creator import BuildCreator
 from service_buddy_too.util.command_util import invoke_process
-
+from cryptography.fernet import Fernet
 
 class BambooBuildCreator(BuildCreator):
 
     def __init__(self):
         super().__init__()
         self.build_system_url = 'url'
-
+        self.key = Fernet.generate_key()
+        self.cipher_suite = Fernet(self.key)
     def options(self):
         opt_dict = OrderedDict()
         opt_dict[self.build_system_url] = "URL of bamboo server"
@@ -25,9 +26,10 @@ class BambooBuildCreator(BuildCreator):
         self.url = default_config.get(self.build_system_url, default_config.get('bamboo-url', None))
         self.build_templates = build_templates
         if user and password:
+            encrypted_password = self.cipher_suite.encrypt(password.encode())
             with open('.credentials', 'w') as cred_file:
-                cred_file.writelines('username={}'.format(user))
-                cred_file.writelines('password={}'.format(password))
+                cred_file.writelines('username={}\n'.format(user))
+                cred_file.writelines('password={}\n'.format(encrypted_password.decode()))
                 cred_file.flush()
 
     def create_project(self, service_definition):
