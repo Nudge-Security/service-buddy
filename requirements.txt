@@ -4,3 +4,5 @@ click
 infra-buddy-too
 requests
 atlassian-python-api
+
+cryptography==44.0.0
